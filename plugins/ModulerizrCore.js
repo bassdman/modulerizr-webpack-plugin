@@ -48,7 +48,6 @@ class ModulerizrCore {
 
 
 function Modulerizr(_config = {}, compiler) {
-    console.log(compiler.context)
     const config = Object.assign({}, {
         dest: path.resolve(compiler.context, "dest"),
         defaultComponentWrapper: "div",
