@@ -1,11 +1,10 @@
 const { AsyncSeriesHook, SyncHook } = require('tapable');
 const colors = require('colors/safe');
 const jp = require('jsonpath');
+const path = require('path')
 const cheerio = require('cheerio');
 const getLogger = require('webpack-log');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
-
-const { foreachPromise } = require('../utils');
 
 class ModulerizrCore {
     constructor(pluginconfig = {}) {
@@ -23,7 +22,7 @@ class ModulerizrCore {
 
         const modulerizr = new Modulerizr(this.config, compiler);
 
-        modulerizr.log(`The rootPath is: ${modulerizr.config._rootPath}`);
+        modulerizr.log(`The rootPath is: ${compiler.context}`);
 
         compiler.hooks.run.tapPromise('Modulerizr-Core-Execute', async(compiler) => {
             if (modulerizr.config.plugins) {
@@ -48,9 +47,10 @@ class ModulerizrCore {
 
 
 
-function Modulerizr(config = {}, compiler) {
+function Modulerizr(_config = {}, compiler) {
+    console.log(compiler.context)
     const config = Object.assign({}, {
-        dest: path.resolve(_config._rootPath || __dirname, "dest"),
+        dest: path.resolve(compiler.context, "dest"),
         defaultComponentWrapper: "div",
         maxRecursionLevel: 100
     }, _config);

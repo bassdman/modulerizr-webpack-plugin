@@ -15,7 +15,7 @@ class InitComponentsPlugin {
             if (modulerizr.config.components == undefined)
                 return;
 
-            const componentFiles = await globFiles(ensureArray(modulerizr.config.components), modulerizr.config._rootPath);
+            const componentFiles = await globFiles(ensureArray(modulerizr.config.components), compiler.context);
             logFoundFiles(componentFiles, modulerizr);
 
             return foreachPromise(componentFiles, async fileName => {
@@ -26,7 +26,7 @@ class InitComponentsPlugin {
 
                 const componentName = $template.attr('name');
 
-                const prerenderdata = await getPrerenderData($templateContent(`[${this.serversideAttributeName}]`), componentName, this.serversideAttributeName, modulerizr.config._rootPath);
+                const prerenderdata = await getPrerenderData($templateContent(`[${this.serversideAttributeName}]`), componentName, this.serversideAttributeName, compiler.context);
 
                 const retVal = Object.assign({
                     id: crypto.createHash('md5').update(fileContent).digest("hex").substring(0, 8),

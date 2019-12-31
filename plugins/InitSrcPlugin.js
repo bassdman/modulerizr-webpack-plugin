@@ -15,7 +15,7 @@ class InitSrcPlugin {
             if (modulerizr.config.src == undefined)
                 throw new Error('Error in your modulerizr.config: "src" is undefined but required.');
 
-            const srcFiles = await globFiles(ensureArray(modulerizr.config.src), modulerizr.config._rootPath);
+            const srcFiles = await globFiles(ensureArray(modulerizr.config.src), compiler.context);
             logFoundFiles(srcFiles, modulerizr);
 
             await foreachPromise(srcFiles, async filePath => {
@@ -24,7 +24,7 @@ class InitSrcPlugin {
                     content,
                     original: content,
                     path: filePath,
-                    absolutePath: path.join(modulerizr.config._rootPath, filePath),
+                    absolutePath: path.join(compiler.context, filePath),
                     key: filePath,
                     id: crypto.createHash('md5').update(content).digest("hex").substring(0, 8)
                 };

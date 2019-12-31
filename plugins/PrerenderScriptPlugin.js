@@ -19,7 +19,7 @@ class PrerenderScriptPlugin {
                 await fs.ensureDir(path.dirname(tempFilename));
                 await fs.writeFile(tempFilename, $currentScript.html().trim());
 
-                const returnValue = require(path.join(modulerizr.config._rootPath, tempFilename));
+                const returnValue = require(path.join(compiler.context, tempFilename));
 
                 const data = typeof returnValue.data == 'function' ? returnValue.data() : returnValue.data;
 
