@@ -26,9 +26,15 @@ class ModulerizrCore {
         modulerizr.log(`The rootPath is: ${this.config._rootPath}`);
 
         compiler.hooks.run.tapPromise('Modulerizr-Core-Execute', async(compiler) => {
-            modulerizr.config.plugins.forEach(plugin => {
-                plugin.apply(compiler);
-            });
+            if (modulerizr.config.plugins) {
+                if (!Array.isArray(modulerizr.config.plugins))
+                    throw new Error('config.plugins must be of type Array, but is type of ' + typeof modulerizr.config.plugins);
+
+                modulerizr.config.plugins.forEach(plugin => {
+                    plugin.apply(compiler);
+                });
+            }
+
             await compiler.hooks.modulerizrInit.promise(modulerizr);
             await compiler.hooks.modulerizrReady.promise(modulerizr);
             await compiler.hooks.modulerizrRender.promise(modulerizr);

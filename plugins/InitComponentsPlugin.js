@@ -13,7 +13,7 @@ class InitComponentsPlugin {
     apply(compiler) {
         compiler.hooks.modulerizrInit.tapPromise('InitComponentsPlugin', async(modulerizr) => {
             if (modulerizr.config.components == undefined)
-                throw new Error('Error in your modulerizr.config: "src" is undefined but required.');
+                return;
 
             const componentFiles = await globFiles(ensureArray(modulerizr.config.components), modulerizr.config._rootPath);
             logFoundFiles(componentFiles, modulerizr);
