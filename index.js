@@ -7,8 +7,6 @@ const { DebugPlugin } = require("./plugins/DebugPlugin")
 const { ScopeStylesPlugin } = require("./plugins/ScopeStylesPlugin");
 const { ScopeScriptsPlugin } = require("./plugins/ScopeScriptsPlugin");
 const { OnceAttributePlugin } = require("./plugins/OnceAttributePlugin");
-const { PrerenderScriptPlugin } = require("./plugins/PrerenderScriptPlugin");
-
 
 class ModulerizrWebpackPlugin {
     constructor(pluginconfig = {}) {
@@ -23,7 +21,6 @@ class ModulerizrWebpackPlugin {
         new ScopeScriptsPlugin().apply(compiler);
         new PreRenderPlugin().apply(compiler);
         new OnceAttributePlugin().apply(compiler);
-        new PrerenderScriptPlugin().apply(compiler);
     }
 }
 
@@ -36,5 +33,4 @@ exports.PreRenderPlugin = PreRenderPlugin;
 exports.ScopeStylesPlugin = ScopeStylesPlugin;
 exports.ScopeScriptsPlugin = ScopeScriptsPlugin;
 exports.OnceAttributePlugin = OnceAttributePlugin;
-exports.PrerenderScriptPlugin = PrerenderScriptPlugin;
 exports.DebugPlugin = DebugPlugin;

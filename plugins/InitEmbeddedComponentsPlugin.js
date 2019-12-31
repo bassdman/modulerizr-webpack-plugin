@@ -6,17 +6,20 @@ class InitEmbeddedComponentsPlugin {
         this.internal = true;
     }
     apply(compiler) {
-        compiler.hooks.modulerizrInit.tapPromise('InitEmbeddedComponentsPlugin', async(modulerizr) => {
+        compiler.hooks.modulerizrInit.tap('InitEmbeddedComponentsPlugin', modulerizr => {
 
-            return await modulerizr.store.each('$["src","component"].*', (currentFile, currentPath, i) => {
-                return addEmbeddedComponents(modulerizr, currentFile, currentPath, i);
+            modulerizr.store.each('$.component.*', (currentFile, currentPath, i) => {
+                const $ = cheerio.load(currentFile.content);
+                return addEmbeddedComponents(modulerizr, $, currentPath, i);
+            })
+            modulerizr.src.$each($ => {
+                return addEmbeddedComponents(modulerizr, $);
             })
         })
     }
 }
 
-function addEmbeddedComponents(modulerizr, currentFile, currentPathAll, i) {
-    const $ = cheerio.load(currentFile.content);
+function addEmbeddedComponents(modulerizr, $, currentPathAll, i) {
     const globalWrapperTag = modulerizr.config.defaultComponentWrapper;
 
     return modulerizr.store.each("$.component.*", (component, currentPath, i) => {
@@ -47,7 +50,9 @@ function addEmbeddedComponents(modulerizr, currentFile, currentPathAll, i) {
                 slots: getSlots($currentComp, $)
             }
             modulerizr.store.value(`$.embeddedComponents.id_${componentId}`, embeddedComponentsConfig);
-            modulerizr.store.value(`${currentPathAll}.content`, $.html(':root'));
+
+            if (currentPathAll)
+                modulerizr.store.value(`${currentPathAll}.content`, $.html(':root'));
         });
     })
     return;

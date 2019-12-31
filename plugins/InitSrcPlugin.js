@@ -29,8 +29,6 @@ class InitSrcPlugin {
                     id: crypto.createHash('md5').update(content).digest("hex").substring(0, 8)
                 };
 
-                modulerizr.store.value(`$.src.id_${retObj.id}`, retObj);
-
                 const filepath = path.join(filePath)
                 const srcOptions = Object.assign({}, modulerizr.config.srcOptions || {}, {
                     template: filepath,

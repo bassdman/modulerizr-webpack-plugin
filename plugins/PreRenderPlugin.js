@@ -6,14 +6,12 @@ class PreRenderPlugin {
     }
     apply(compiler) {
         compiler.hooks.modulerizrRender.tap('PreRenderPlugin', modulerizr => {
-            modulerizr.store.each("$.src.*", (currentFile, currentPath, i) => {
+            modulerizr.src.$each($ => {
                 let allComponentsRendered = false;
                 let level = 1;
-                let content = currentFile.content;
 
                 while (!allComponentsRendered) {
-                    content = render(modulerizr, currentPath, content);
-                    const $ = cheerio.load(content);
+                    render(modulerizr, $);
                     if ($('[data-render-comp]').length == 0)
                         allComponentsRendered = true;
 
@@ -22,13 +20,11 @@ class PreRenderPlugin {
                     }
                     level++;
                 }
-
-                modulerizr.save(currentFile.absolutePath, content.trim());
             });
         });
 
         compiler.hooks.modulerizrFinished.tap('PreRenderPlugin-cleanup', modulerizr => {
-            modulerizr.store.$each("$.src.*", ($, currentFile, currentPath, i) => {
+            modulerizr.src.$each($ => {
                 $(`[data-component-instance]`).removeAttr('data-component-instance');
             });
         })
@@ -36,8 +32,7 @@ class PreRenderPlugin {
 }
 
 
-function render(modulerizr, currentPath, content) {
-    const $ = cheerio.load(content);
+function render(modulerizr, $) {
     const $componentsToRender = $('[data-render-comp]');
     $componentsToRender.each((i, e) => {
         const $currentComp = $(e);
@@ -58,8 +53,6 @@ function render(modulerizr, currentPath, content) {
         const replacedContent = replaceSlots(componentConfig.content, componentElemConfig);
         $currentComp.replaceWith(replacedContent.trim());
     });
-    modulerizr.store.value(`${currentPath}.content`, $.html($(':root')));
-
     return $(':root').html();
 }
 

@@ -65,6 +65,58 @@ function Modulerizr(config, compiler) {
 
         },
         config,
+        src: {
+            $each(fnOrSelector, _fn) {
+                const selector = _fn == null ? null : fnOrSelector;
+                const fn = _fn == null ? fnOrSelector : _fn;
+
+                compiler.hooks.compilation.tap('ModulerizrEachSrcFile', compilation => {
+                    HtmlWebpackPlugin.getHooks(compilation).beforeEmit.tap('ModulerizrEachSrcFile', (htmlPluginData) => {
+                        const $el = cheerio.load(htmlPluginData.html);
+
+                        if (selector == null) {
+                            fn($el, htmlPluginData);
+                        } else {
+                            const $tags = $el(selector);
+
+                            $tags.each((i, el) => {
+                                const $currentTag = $el(el);
+                                fn($currentTag, htmlPluginData);
+                            });
+                        }
+
+                        const replacedHtml = $el.html(':root');
+
+                        htmlPluginData.html = replacedHtml;
+                    })
+                })
+            },
+            $eachPromise(fnOrSelector, _fn) {
+                const selector = _fn == null ? null : fnOrSelector;
+                const fn = _fn == null ? fnOrSelector : _fn;
+
+                compiler.hooks.compilation.tap('ModulerizrEachSrcFile', compilation => {
+                    HtmlWebpackPlugin.getHooks(compilation).beforeEmit.tapPromise('ModulerizrEachSrcFile', async htmlPluginData => {
+                        const $el = cheerio.load(htmlPluginData.html);
+
+                        if (selector == null) {
+                            fn($el, htmlPluginData);
+                        } else {
+                            const $tags = $el(selector);
+
+                            $tags.each((i, el) => {
+                                const $currentTag = $el(el);
+                                fn($currentTag, htmlPluginData);
+                            });
+                        }
+
+                        const replacedHtml = $el.html(':root');
+
+                        htmlPluginData.html = replacedHtml;
+                    })
+                })
+            }
+        },
         save(filePath, newContent) {
             compiler.hooks.compilation.tap('HtmlReplaceWebpackPlugin', compilation => {
                 HtmlWebpackPlugin.getHooks(compilation).beforeEmit.tap('ModulerizrSaveFile', (htmlPluginData) => {
@@ -140,19 +192,6 @@ function Modulerizr(config, compiler) {
                 fn(node.value, _path, i);
             })
         },
-        eachPromise(query, fn) {
-            if (query == null)
-                throw new Error('Modulerizr.store.parent(query): query is undefined');
-
-            const nodes = jp.nodes(store, query.toLowerCase()) || [];
-
-            return foreachPromise(nodes, async(node, i) => {
-                const _path = node.path.join('.');
-
-                await fn(node.value, _path, i);
-            })
-        },
-
         $each(_query, fn) {
             if (_query == null)
                 throw new Error('Modulerizr.store.parent(query): query is undefined');
@@ -180,37 +219,6 @@ function Modulerizr(config, compiler) {
 
                 if ($el !== undefined) {
                     this.value(`${_path}.content`, $el.html(':root'))
-                    modulerizr.save(node.value.absolutePath, $el);
-                }
-            })
-        },
-        $eachPromise(_query, fn) {
-            if (_query == null)
-                throw new Error('Modulerizr.store.parent(query): query is undefined');
-
-            const query = _query.split('/')[0];
-            const selector = _query.split('/').length > 1 ? _query.split('/')[1] : undefined;
-
-            const nodes = jp.nodes(store, query.toLowerCase()) || [];
-
-            return foreachPromise(nodes, async(node, i) => {
-                const _path = node.path.join('.');
-                const $el = node.value.content ? cheerio.load(node.value.content) : undefined;
-
-                if (selector == null) {
-                    await fn($el, node.value, _path, i);
-                } else {
-                    const $tags = $el(selector);
-
-                    await foreachPromise($tags, async e => {
-                        const $currentTag = $el(e);
-                        await fn($currentTag, $el, _path, i);
-                    });
-
-                }
-
-                if ($el !== undefined) {
-                    this.value(`${_path}.content`, $el.html(':root'));
                     modulerizr.save(node.value.absolutePath, $el);
                 }
             })
