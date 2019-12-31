@@ -23,7 +23,7 @@ class ModulerizrCore {
 
         const modulerizr = new Modulerizr(this.config, compiler);
 
-        modulerizr.log(`The rootPath is: ${this.config._rootPath}`);
+        modulerizr.log(`The rootPath is: ${modulerizr.config._rootPath}`);
 
         compiler.hooks.run.tapPromise('Modulerizr-Core-Execute', async(compiler) => {
             if (modulerizr.config.plugins) {
@@ -48,7 +48,13 @@ class ModulerizrCore {
 
 
 
-function Modulerizr(config, compiler) {
+function Modulerizr(config = {}, compiler) {
+    const config = Object.assign({}, {
+        dest: path.resolve(_config._rootPath || __dirname, "dest"),
+        defaultComponentWrapper: "div",
+        maxRecursionLevel: 100
+    }, _config);
+
     const store = {};
     const log = getLogger({
         name: config.logName || 'modulerizr',
