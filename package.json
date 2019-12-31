@@ -1,6 +1,6 @@
 {
     "name": "modulerizr-webpack-plugin",
-    "version": "0.1.0-beta",
+    "version": "0.1.2-beta",
     "description": "Integrate a powerful, component based architecture to your legacy project with one webpack-plugin",
     "main": "index.js",
     "scripts": {
@@ -13,7 +13,7 @@
     ],
     "author": "Manuel Gelsen",
     "license": "MIT",
-    "dev-dependencies": {
+    "dependencies": {
         "cheerio": "^1.0.0-rc.3",
         "jsonpath": "^1.0.2",
         "pretty": "^2.0.0",
