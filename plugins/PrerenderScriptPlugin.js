@@ -33,10 +33,10 @@ class PrerenderScriptPlugin {
         })
 
         compiler.hooks.modulerizrFinished.tapPromise('PrerenderScriptPlugin-cleanup', async(modulerizr) => {
-            return modulerizr.src.$eachPromise(async $ => {
+            await modulerizr.src.$eachPromise(async $ => {
                 $(`[${this.serversideAttributeName}]`).remove();
-                await fs.remove('./_temp');
             });
+            await fs.remove('./_temp');
         })
     }
 }

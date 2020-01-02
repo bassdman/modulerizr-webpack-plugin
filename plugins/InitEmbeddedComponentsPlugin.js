@@ -7,15 +7,13 @@ class InitEmbeddedComponentsPlugin {
     }
     apply(compiler) {
         compiler.hooks.modulerizrInit.tap('InitEmbeddedComponentsPlugin', modulerizr => {
-
-            modulerizr.store.each('$.component.*', (currentFile, currentPath, i) => {
-                const $ = cheerio.load(currentFile.content);
-                return addEmbeddedComponents(modulerizr, $, currentPath, i);
-            })
             modulerizr.src.$each($ => {
                 return addEmbeddedComponents(modulerizr, $);
             })
         })
+        compiler.hooks.modulerizrComponentInitialized.tap('InitComponentPlugin-TestComponentInitialized', ($, component, modulerizr) => {
+            addEmbeddedComponents(modulerizr, $);
+        });
     }
 }
 

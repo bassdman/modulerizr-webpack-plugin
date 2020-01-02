@@ -20,32 +20,24 @@ class InitComponentsPlugin {
 
             return foreachPromise(componentFiles, async fileName => {
                 const fileContent = await fs.readFile(fileName, "UTF-8");
-                const $ = cheerio.load(`${fileContent}`);
-                const $template = $('template');
-                const $templateContent = cheerio.load($template.html());
+                const $ = cheerio.load(`${fileContent.replace(/<\s*template/,'<m-template').replace(/template\s*>/,'m-template>')}`);
+                const $template = $('m-template');
 
                 const componentName = $template.attr('name');
-
-                const prerenderdata = await getPrerenderData($templateContent(`[${this.serversideAttributeName}]`), componentName, this.serversideAttributeName, compiler.context);
+                const prerenderdata = await getPrerenderData($(`[${this.serversideAttributeName}]`), componentName, this.serversideAttributeName, compiler.context);
 
                 const retVal = Object.assign({
                     id: crypto.createHash('md5').update(fileContent).digest("hex").substring(0, 8),
                     params: {},
                     key: fileName,
-                    content: $template.html(),
                     original: $.html($template),
                     name: componentName,
                     prerenderdata
                 }, $template.attributes);
 
-                const attributes = $template.get(0).attribs;
+                await compiler.hooks.modulerizrComponentInitialized.promise($, retVal, modulerizr);
 
-                Object.keys(attributes).forEach(attributeName => {
-                    if (attributeName.startsWith(':')) {
-                        retVal.params[attributeName.replace(':', '')] = attributes[attributeName];
-                        delete retVal[attributeName];
-                    }
-                })
+                retVal.content = $('m-template').html();
 
                 modulerizr.store.value(`$.component.id_${retVal.id}`, retVal)
 

@@ -4,25 +4,24 @@ class ScopeScriptsPlugin {
         this.internal = true;
     }
     apply(compiler) {
-        compiler.hooks.modulerizrReady.tap('ScopeScriptsPlugin', modulerizr => {
-            modulerizr.store.$each('$.component.*', ($, currentFile, currentPath) => {
-                const $scriptTags = $(`script[${this.scopedAttributeName}]`);
-                $scriptTags.each((i, e) => {
-                    const $currentScripts = $(e);
+        compiler.hooks.modulerizrComponentInitialized.tap('InitComponentPlugin-TestComponentInitialized', ($, component, modulerizr) => {
+            const $scriptTags = $(`script[${this.scopedAttributeName}]`);
+            $scriptTags.each((i, e) => {
+                const $currentScripts = $(e);
 
-                    const scopedScript = `(function(window){
+                const scopedScript = `(function(window){
                         var _m = {
-                            id: "${currentFile.id}",
-                            name: "${currentFile.name}",
-                            $el: document.getElementById("${currentFile.id}"),
+                            id: "${component.id}",
+                            name: "${component.name}",
+                            $el: document.getElementById("${component.id}"),
                             attributes: ##component.attributes##,
                             slots: ##component.slots##
                         };
                         ${$currentScripts.html()}
                     })(window);`;
-                    $currentScripts.html(scopedScript);
-                });
+                $currentScripts.html(scopedScript);
             });
+            //   console.log($(':root').html())
         });
 
         compiler.hooks.modulerizrAfterRender.tap('ScopeScriptsPlugin-afterRender', modulerizr => {
