@@ -6,30 +6,27 @@ class OnceAttributePlugin {
         this.internal = true;
     }
     apply(compiler) {
-        compiler.hooks.modulerizrAfterRender.tap('OnceAttributePlugin', modulerizr => {
-            modulerizr.src.$each($ => {
-                const onceAttributes = {};
+        compiler.hooks.modulerizrFileRendered.tap('OnceAttributePlugin', ($, file, modulerizr) => {
+            const onceAttributes = {};
 
-                logIfExternalScriptWithoutOnceFound(modulerizr, $, this.onceAttributeName);
+            logIfExternalScriptWithoutOnceFound(modulerizr, $, this.onceAttributeName);
+            //identical style Tags are automatically rendered once
+            $('style').attr(this.onceAttributeName, "");
 
-                //identical style Tags are automatically rendered once
-                $('style').attr(this.onceAttributeName, "");
+            const $onceAttributes = $(`[${this.onceAttributeName}]`);
+            $onceAttributes.each((i, e) => {
+                const $currentOnceAttribute = $(e);
+                const htmlToValidate = $.html($currentOnceAttribute).replace(/\s/g, "");
 
-                const $onceAttributes = $(`[${this.onceAttributeName}]`);
-                $onceAttributes.each((i, e) => {
-                    const $currentOnceAttribute = $(e);
-                    const htmlToValidate = $.html($currentOnceAttribute).replace(/\s/g, "");
-
-                    const elementHash = crypto.createHash('md5').update(htmlToValidate).digest("hex").substring(0, 16);
-                    if (onceAttributes[elementHash] != null) {
-                        $currentOnceAttribute.replaceWith('<!-- Here was a component with attribute "m-once", which also exists above. -->');
-                        return;
-                    }
-                    onceAttributes[elementHash] = true;
-                });
-                $onceAttributes.removeAttr(this.onceAttributeName);
+                const elementHash = crypto.createHash('md5').update(htmlToValidate).digest("hex").substring(0, 16);
+                if (onceAttributes[elementHash] != null) {
+                    $currentOnceAttribute.replaceWith('<!-- Here was a component with attribute "m-once", which also exists above. -->');
+                    return;
+                }
+                onceAttributes[elementHash] = true;
             });
-        });
+            $onceAttributes.removeAttr(this.onceAttributeName);
+        })
     }
 }
 

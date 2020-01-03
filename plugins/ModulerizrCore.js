@@ -5,7 +5,6 @@ const path = require('path')
 const cheerio = require('cheerio');
 const getLogger = require('webpack-log');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
-
 class ModulerizrCore {
     constructor(pluginconfig = {}) {
         this.config = pluginconfig;
@@ -14,11 +13,9 @@ class ModulerizrCore {
         compiler.hooks.modulerizrInit = new AsyncSeriesHook(['modulerizr']);
         compiler.hooks.modulerizrComponentInitialized = new AsyncSeriesHook(['$component', 'component', 'modulerizr']);
         compiler.hooks.modulerizrFileRendered = new AsyncSeriesHook(['$file', 'srcFile', 'modulerizr']);
-        compiler.hooks.modulerizrFileComponent = new AsyncSeriesHook(['$component', 'component', 'modulerizr']);
-        compiler.hooks.modulerizrReady = new AsyncSeriesHook(['modulerizr']);
-        compiler.hooks.modulerizrRender = new AsyncSeriesHook(['modulerizr']);
-        compiler.hooks.modulerizrAfterRender = new AsyncSeriesHook(['modulerizr']);
-        compiler.hooks.modulerizrFinished = new AsyncSeriesHook(['stats', 'modulerizr']);
+        compiler.hooks.modulerizrFileFinished = new AsyncSeriesHook(['$file', 'srcFile', 'modulerizr']);
+        compiler.hooks.modulerizrRenderFile = new AsyncSeriesHook(['$', 'srcFile', 'modulerizr']);
+        compiler.hooks.modulerizrFinished = new AsyncSeriesHook(['modulerizr', 'compilation']);
 
         const modulerizr = new Modulerizr(this.config, compiler);
 
@@ -35,10 +32,22 @@ class ModulerizrCore {
             }
 
             await compiler.hooks.modulerizrInit.promise(modulerizr);
-            await compiler.hooks.modulerizrReady.promise(modulerizr);
-            await compiler.hooks.modulerizrRender.promise(modulerizr);
-            await compiler.hooks.modulerizrAfterRender.promise(modulerizr);
-            await compiler.hooks.modulerizrFinished.promise(modulerizr);
+
+            compiler.hooks.compilation.tap('ModulerizrPreRenderPlugin', compilation => {
+                const nrOfFiles = modulerizr.store.queryOne('nrOfFiles');
+                let i = 0;
+                HtmlWebpackPlugin.getHooks(compilation).beforeEmit.tapPromise('ModulerizrPreRenderPlugin', async(htmlPluginData) => {
+                    const $ = cheerio.load(htmlPluginData.html);
+                    await compiler.hooks.modulerizrRenderFile.promise($, htmlPluginData, modulerizr);
+                    htmlPluginData.html = $.html(':root');
+
+                    if (i == nrOfFiles - 1) {
+                        await compiler.hooks.modulerizrFinished.promise(modulerizr, compilation);
+                        console.log('bin driiine')
+                    }
+                    i++;
+                })
+            });
         });
     }
 }

@@ -45,11 +45,12 @@ class InitComponentsPlugin {
             })
         });
 
-        compiler.hooks.modulerizrFinished.tapPromise('InitComponentsPlugin-cleanup', async(modulerizr) => {
-            return modulerizr.src.$eachPromise(async $ => {
-                $(`[${this.serversideAttributeName}]`).remove();
-                await fs.remove('./_temp');
-            });
+        compiler.hooks.modulerizrFileFinished.tap('InitComponentsPlugin-cleanup', ($, srcFile, modulerizr) => {
+            $(`[${this.serversideAttributeName}]`).remove();
+        })
+
+        compiler.hooks.modulerizrFinished.tapPromise('InitComponentsPlugin-cleanup', async() => {
+            await fs.remove('./_temp');
         })
     }
 }
@@ -78,8 +79,10 @@ async function getPrerenderData($prerenderdataTags, componentName, serversideAtt
     await fs.ensureDir(path.dirname(tempFilename));
     await fs.writeFile(tempFilename, script);
 
+
     const returnValue = require(path.join(rootPath, tempFilename));
     const returnData = typeof returnValue.data == 'function' ? returnValue.data() : returnValue.data;
+
     return returnData;
 }
 

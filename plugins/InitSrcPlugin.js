@@ -16,6 +16,8 @@ class InitSrcPlugin {
                 throw new Error('Error in your modulerizr.config: "src" is undefined but required.');
 
             const srcFiles = await globFiles(ensureArray(modulerizr.config.src), compiler.context);
+            modulerizr.store.value('$.nrOfFiles', srcFiles.length);
+
             logFoundFiles(srcFiles, modulerizr);
 
             await foreachPromise(srcFiles, async filePath => {

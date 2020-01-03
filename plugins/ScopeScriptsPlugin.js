@@ -10,37 +10,37 @@ class ScopeScriptsPlugin {
                 const $currentScripts = $(e);
 
                 const scopedScript = `(function(window){
-                        var _m = {
+                        var _component = {
                             id: "${component.id}",
                             name: "${component.name}",
                             $el: document.getElementById("${component.id}"),
+                            data: ##component.data##,
                             attributes: ##component.attributes##,
-                            slots: ##component.slots##
+                            slots: ##component.slots##,
                         };
                         ${$currentScripts.html()}
                     })(window);`;
                 $currentScripts.html(scopedScript);
             });
-            //   console.log($(':root').html())
         });
 
-        compiler.hooks.modulerizrAfterRender.tap('ScopeScriptsPlugin-afterRender', modulerizr => {
-            modulerizr.src.$each(`script[${this.scopedAttributeName}]`, $ => {
-                const embeddedComponentId = $.parent('[data-component-instance]').attr('data-component-instance');
+        compiler.hooks.modulerizrFileRendered.tap('ScopeScriptsPlugin-cleanup', ($, srcFile, modulerizr) => {
+            const $scopedScripts = $(`script[${this.scopedAttributeName}]`);
+            $scopedScripts.each((i, e) => {
+                const embeddedComponentId = $(e).parent('[data-component-instance]').attr('data-component-instance');
                 const embeddedComponent = modulerizr.store.queryOne(`$.embeddedComponents.id_${embeddedComponentId}`);
-
-                const replacedScript = $.html()
+                const component = modulerizr.store.queryOne(`$.component.id_${embeddedComponent.componentId}`);
+                const replacedScript = $(e).html()
                     .replace('##component.attributes##', JSON.stringify(embeddedComponent.attributes))
+                    .replace('##component.data##', JSON.stringify(Object.assign({}, embeddedComponent.attributes, component.prerenderdata || {})))
                     .replace('##component.slots##', JSON.stringify(embeddedComponent.slots));
 
-                $.html(replacedScript);
-            });
-        })
+                $(e).html(replacedScript);
+            })
+        });
 
-        compiler.hooks.modulerizrFinished.tap('ScopeScriptsPlugin-cleanup', modulerizr => {
-            modulerizr.src.$each($ => {
-                $(`[${this.scopedAttributeName}]`).removeAttr(this.scopedAttributeName);
-            });
+        compiler.hooks.modulerizrFileFinished.tap('ScopeScriptsPlugin-cleanup', ($) => {
+            $(`[${this.scopedAttributeName}]`).removeAttr(this.scopedAttributeName);
         })
     }
 }

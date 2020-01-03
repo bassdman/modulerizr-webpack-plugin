@@ -1,32 +1,37 @@
 const cheerio = require('cheerio');
+const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 class PreRenderPlugin {
     constructor(pluginconfig = {}) {
         this.internal = true;
     }
     apply(compiler) {
-        compiler.hooks.modulerizrRender.tap('PreRenderPlugin', modulerizr => {
-            modulerizr.src.$each($ => {
-                let allComponentsRendered = false;
-                let level = 1;
+        compiler.hooks.modulerizrRenderFile.tapPromise('ModulerizrPreRenderPlugin', async($, htmlPluginData, modulerizr) => {
 
-                while (!allComponentsRendered) {
-                    render(modulerizr, $);
-                    if ($('[data-render-comp]').length == 0)
-                        allComponentsRendered = true;
+            let allComponentsRendered = false;
+            let level = 1;
 
-                    if (level >= modulerizr.config.maxRecursionLevel) {
-                        throw new Error('There is a Problem with infinite recursion in nested Elements. Sth like Component "A" includes Component "B"  and Component "B" includes Component "A". This leads to an infinite loop. Please fix this.');
-                    }
-                    level++;
+            while (!allComponentsRendered) {
+                render(modulerizr, $);
+                if ($('[data-render-comp]').length == 0)
+                    allComponentsRendered = true;
+
+                if (level >= modulerizr.config.maxRecursionLevel) {
+                    throw new Error('There is a Problem with infinite recursion in nested Elements. Sth like Component "A" includes Component "B"  and Component "B" includes Component "A". This leads to an infinite loop. Please fix this.');
                 }
-            });
-        });
+                level++;
+            }
 
-        compiler.hooks.modulerizrFinished.tap('PreRenderPlugin-cleanup', modulerizr => {
-            modulerizr.src.$each($ => {
-                $(`[data-component-instance]`).removeAttr('data-component-instance');
-            });
+            await compiler.hooks.modulerizrFileRendered.promise($, htmlPluginData, modulerizr);
+            await compiler.hooks.modulerizrFileFinished.promise($, htmlPluginData, modulerizr);
+
+            const replacedHtml = $.html(':root');
+
+            htmlPluginData.html = replacedHtml;
+        })
+
+        compiler.hooks.modulerizrFileFinished.tap('ScopeScriptsPlugin-cleanup', ($) => {
+            $(`[data-component-instance]`).removeAttr('data-component-instance');
         })
     }
 }
