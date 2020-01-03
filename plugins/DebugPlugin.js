@@ -1,4 +1,5 @@
 const path = require('path');
+const store = require('../store');
 
 class DebugPlugin {
     constructor(pluginconfig = {}) {
@@ -13,7 +14,7 @@ class DebugPlugin {
             return;
 
         compiler.hooks.modulerizrFinished.tapPromise('DebugPlugin-CreateDebugFile', async(modulerizr, compilation) => {
-            const content = JSON.stringify({ config: modulerizr.config, store: modulerizr.store.queryOne('$') }, null, 1);
+            const content = JSON.stringify({ config: modulerizr.config, store: store.root() }, null, 1);
             compilation.assets['modulerizr-debug.config.json'] = {
                 source() {
                     return content;

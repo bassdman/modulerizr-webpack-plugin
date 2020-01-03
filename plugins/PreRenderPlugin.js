@@ -1,5 +1,6 @@
 const cheerio = require('cheerio');
-const HtmlWebpackPlugin = require('html-webpack-plugin');
+
+const store = require('../store');
 
 class PreRenderPlugin {
     constructor(pluginconfig = {}) {
@@ -42,7 +43,7 @@ function render(modulerizr, $) {
     $componentsToRender.each((i, e) => {
         const $currentComp = $(e);
         const componentId = $currentComp.attr('data-component-id');
-        const componentElemConfig = modulerizr.store.queryOne(`$.embeddedComponents.id_${componentId}`);
+        const componentElemConfig = store.queryOne(`$.embeddedComponents.id_${componentId}`);
 
         if (componentElemConfig.wrapperTag != null) {
             $currentComp.wrap(componentElemConfig.wrapperTag);
@@ -53,7 +54,7 @@ function render(modulerizr, $) {
                 .attr("data-component-instance", componentId)
         }
 
-        const componentConfig = modulerizr.store.queryOne(`$.component.id_${componentElemConfig.componentId}`);
+        const componentConfig = store.queryOne(`$.component.id_${componentElemConfig.componentId}`);
 
         const replacedContent = replaceSlots(componentConfig.content, componentElemConfig);
         $currentComp.replaceWith(replacedContent.trim());

@@ -3,6 +3,7 @@ const fs = require('fs-extra');
 const crypto = require('crypto');
 const path = require('path');
 
+const store = require('../store');
 const { ensureArray, foreachPromise, globFiles } = require('../utils');
 
 class InitComponentsPlugin {
@@ -39,7 +40,7 @@ class InitComponentsPlugin {
 
                 retVal.content = $('m-template').html();
 
-                modulerizr.store.value(`$.component.id_${retVal.id}`, retVal)
+                store.value(`$.component.id_${retVal.id}`, retVal)
 
                 return retVal;
             })

@@ -3,6 +3,7 @@ const crypto = require('crypto');
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 
+const store = require('../store');
 const { ensureArray, globFiles, foreachPromise } = require('../utils');
 
 
@@ -16,7 +17,7 @@ class InitSrcPlugin {
                 throw new Error('Error in your modulerizr.config: "src" is undefined but required.');
 
             const srcFiles = await globFiles(ensureArray(modulerizr.config.src), compiler.context);
-            modulerizr.store.value('$.nrOfFiles', srcFiles.length);
+            store.value('$.nrOfFiles', srcFiles.length);
 
             logFoundFiles(srcFiles, modulerizr);
 

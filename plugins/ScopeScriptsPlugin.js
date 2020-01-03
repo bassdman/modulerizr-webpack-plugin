@@ -1,3 +1,5 @@
+const store = require('../store');
+
 class ScopeScriptsPlugin {
     constructor(pluginconfig = {}) {
         this.scopedAttributeName = pluginconfig.scopedAttributeName || 'm-scoped';
@@ -28,8 +30,8 @@ class ScopeScriptsPlugin {
             const $scopedScripts = $(`script[${this.scopedAttributeName}]`);
             $scopedScripts.each((i, e) => {
                 const embeddedComponentId = $(e).parent('[data-component-instance]').attr('data-component-instance');
-                const embeddedComponent = modulerizr.store.queryOne(`$.embeddedComponents.id_${embeddedComponentId}`);
-                const component = modulerizr.store.queryOne(`$.component.id_${embeddedComponent.componentId}`);
+                const embeddedComponent = store.queryOne(`$.embeddedComponents.id_${embeddedComponentId}`);
+                const component = store.queryOne(`$.component.id_${embeddedComponent.componentId}`);
                 const replacedScript = $(e).html()
                     .replace('##component.attributes##', JSON.stringify(embeddedComponent.attributes))
                     .replace('##component.data##', JSON.stringify(Object.assign({}, embeddedComponent.attributes, component.prerenderdata || {})))

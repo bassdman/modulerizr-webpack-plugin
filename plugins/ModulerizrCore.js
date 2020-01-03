@@ -1,10 +1,12 @@
 const { AsyncSeriesHook, SyncHook } = require('tapable');
 const colors = require('colors/safe');
-const jp = require('jsonpath');
 const path = require('path')
 const cheerio = require('cheerio');
 const getLogger = require('webpack-log');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+
+const store = require('../store');
+
 class ModulerizrCore {
     constructor(pluginconfig = {}) {
         this.config = pluginconfig;
@@ -34,7 +36,7 @@ class ModulerizrCore {
             await compiler.hooks.modulerizrInit.promise(modulerizr);
 
             compiler.hooks.compilation.tap('ModulerizrPreRenderPlugin', compilation => {
-                const nrOfFiles = modulerizr.store.queryOne('nrOfFiles');
+                const nrOfFiles = store.queryOne('nrOfFiles');
                 let i = 0;
                 HtmlWebpackPlugin.getHooks(compilation).beforeEmit.tapPromise('ModulerizrPreRenderPlugin', async(htmlPluginData) => {
                     const $ = cheerio.load(htmlPluginData.html);
@@ -43,7 +45,6 @@ class ModulerizrCore {
 
                     if (i == nrOfFiles - 1) {
                         await compiler.hooks.modulerizrFinished.promise(modulerizr, compilation);
-                        console.log('bin driiine')
                     }
                     i++;
                 })
@@ -63,7 +64,6 @@ function Modulerizr(_config = {}, compiler) {
         maxRecursionLevel: 100
     }, _config);
 
-    const store = {};
     const log = getLogger({
         name: config.logName || 'modulerizr',
         level: config.logLevel || 'trace',
@@ -111,85 +111,9 @@ function Modulerizr(_config = {}, compiler) {
                     })
                 })
             },
-            $eachPromise(fnOrSelector, _fn) {
-                const selector = _fn == null ? null : fnOrSelector;
-                const fn = _fn == null ? fnOrSelector : _fn;
-
-                compiler.hooks.compilation.tap('ModulerizrEachSrcFile', compilation => {
-                    HtmlWebpackPlugin.getHooks(compilation).beforeEmit.tapPromise('ModulerizrEachSrcFile', async htmlPluginData => {
-                        const $el = cheerio.load(htmlPluginData.html);
-
-                        if (selector == null) {
-                            fn($el, htmlPluginData);
-                        } else {
-                            const $tags = $el(selector);
-
-                            $tags.each((i, el) => {
-                                const $currentTag = $el(el);
-                                fn($currentTag, htmlPluginData);
-                            });
-                        }
-
-                        const replacedHtml = $el.html(':root');
-
-                        htmlPluginData.html = replacedHtml;
-                    })
-                })
-            }
-        },
-        save(filePath, newContent) {
-            compiler.hooks.compilation.tap('HtmlReplaceWebpackPlugin', compilation => {
-                HtmlWebpackPlugin.getHooks(compilation).beforeEmit.tap('ModulerizrSaveFile', (htmlPluginData) => {
-                    const replacement = newContent.html ? newContent.html(':root') : newContent;
-
-                    const currentFilePath = htmlPluginData.plugin.options.template.split('!')[1];
-
-                    if (filePath == undefined || filePath !== currentFilePath)
-                        return;
-
-                    htmlPluginData.html = replacement;
-                })
-            })
-
-        },
+        }
     }
 
-    modulerizr.store = {
-        debug() {
-            console.log(store);
-            return store;
-        },
-        queryOne(query, count) {
-            if (query == null)
-                throw new Error('Modulerizr.store.query(query[,count]): query is undefined');
-
-            return jp.query(store, query.toLowerCase(), count)[0];
-        },
-        value(query, value) {
-            if (query == null)
-                throw new Error('Modulerizr.store.value(query): query is undefined');
-
-            jp.value(store, query.toLowerCase(), value);
-        },
-        nodes(query, count) {
-            if (query == null)
-                throw new Error('Modulerizr.store.nodes(query[,count]): query is undefined');
-
-            return jp.nodes(store, query.toLowerCase(), count);
-        },
-        each(query, fn) {
-            if (query == null)
-                throw new Error('Modulerizr.store.parent(query): query is undefined');
-
-            const nodes = jp.nodes(store, query.toLowerCase()) || [];
-
-            return nodes.forEach((node, i) => {
-                const _path = node.path.join('.');
-
-                fn(node.value, _path, i);
-            })
-        },
-    }
     return modulerizr;
 }
 

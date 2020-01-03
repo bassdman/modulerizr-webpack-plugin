@@ -1,5 +1,5 @@
-const cheerio = require('cheerio');
 const crypto = require('crypto');
+const store = require('../store');
 
 class InitEmbeddedComponentsPlugin {
     constructor(pluginconfig = {}) {
@@ -20,7 +20,7 @@ class InitEmbeddedComponentsPlugin {
 function addEmbeddedComponents(modulerizr, $, currentPathAll, i) {
     const globalWrapperTag = modulerizr.config.defaultComponentWrapper;
 
-    return modulerizr.store.each("$.component.*", (component, currentPath, i) => {
+    return store.each("$.component.*", (component, currentPath, i) => {
         let $allComponents = $(component.name);
         const componentExists = $allComponents.length > 0;
 
@@ -47,10 +47,10 @@ function addEmbeddedComponents(modulerizr, $, currentPathAll, i) {
                 attributes,
                 slots: getSlots($currentComp, $)
             }
-            modulerizr.store.value(`$.embeddedComponents.id_${componentId}`, embeddedComponentsConfig);
+            store.value(`$.embeddedComponents.id_${componentId}`, embeddedComponentsConfig);
 
             if (currentPathAll)
-                modulerizr.store.value(`${currentPathAll}.content`, $.html(':root'));
+                store.value(`${currentPathAll}.content`, $.html(':root'));
         });
     })
     return;
