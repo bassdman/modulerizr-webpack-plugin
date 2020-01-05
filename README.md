@@ -159,7 +159,7 @@ module.exports = {
     })]
 };
 ```
-> Details for the plugin configuration you see in the next section ["How to run modulerizr"](#how-to-run-modulerizr)
+> Details for the plugin configuration you see in the next section ["How to use it"](#how-to-use-it)
 
 Voilà, your're done. This will be rendered to:
 ``` html
@@ -231,7 +231,7 @@ module.exports = {
 };
 ```
 ### Execute it
-See here how to [execute a webpack configuration](https://webpack.js.org/guides/getting-started/#creating-a-bundle).
+See here how to [execute a webpack configuration](https://webpack.js.org/guides/getting-started/).
 
 ### Config attributes
 #### src
@@ -774,7 +774,7 @@ Declared multiple times in a src-file it would be rendered like this:
 </div>
 ```
 ### Plugins
-You can use any othere webpack-plugin to add more features you want, for example for bundling,... 
+You can use any other webpack-plugin to add more features you want, for example for bundling,... 
 But there are some specific modulerizr-plugins that exist.
 #### Modulerizr-jsrender-plugin
  The [modulerizr-jsrender-plugin](https://www.npmjs.com/package/modulerizr-jsrender-plugin) gives you the chance to add template-syntax in your templates. It is based on [JS-Render](https://www.npmjs.com/package/jsrender).

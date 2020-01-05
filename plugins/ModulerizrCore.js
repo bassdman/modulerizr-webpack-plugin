@@ -23,15 +23,6 @@ class ModulerizrCore {
         context.logger.debug(`The rootPath is: ${compiler.context}`);
 
         compiler.hooks.run.tapPromise('Modulerizr-Core-Execute', async(compiler) => {
-            if (context.config.plugins) {
-                if (!Array.isArray(context.config.plugins))
-                    throw new Error('config.plugins must be of type Array, but is type of ' + typeof context.config.plugins);
-
-                context.config.plugins.forEach(plugin => {
-                    plugin.apply(compiler, context);
-                });
-            }
-
             await compiler.hooks.modulerizrInit.promise(context);
             compiler.hooks.compilation.tap('ModulerizrPreRenderPlugin', compilation => {
                 let i = 0;
