@@ -4,27 +4,27 @@ class PreRenderPlugin {
     constructor(pluginconfig = {}) {
         this.internal = true;
     }
-    apply(compiler, store) {
-        compiler.hooks.modulerizrTriggerRenderFile.tapPromise('ModulerizrPreRenderPlugin', async($, htmlPluginData, modulerizr) => {
+    apply(compiler) {
+        compiler.hooks.modulerizrTriggerRenderFile.tapPromise('ModulerizrPreRenderPlugin', async($, htmlPluginData, context) => {
             let allComponentsRendered = false;
             let level = 1;
 
-            await compiler.hooks.modulerizrPreRenderFile.promise($, htmlPluginData.plugin.options.modulerizr);
+            await compiler.hooks.modulerizrPreRenderFile.promise($, htmlPluginData.plugin.options.modulerizr, context);
 
             while (!allComponentsRendered) {
-                render($, htmlPluginData.plugin.options.modulerizr, store);
+                render($, htmlPluginData.plugin.options.modulerizr, context);
 
                 if ($('[data-render-comp]').length == 0)
                     allComponentsRendered = true;
 
-                if (level >= modulerizr.config.maxRecursionLevel) {
+                if (level >= context.config.maxRecursionLevel) {
                     throw new Error('There is a Problem with infinite recursion in nested Elements. Sth like Component "A" includes Component "B"  and Component "B" includes Component "A". This leads to an infinite loop. Please fix this.');
                 }
                 level++;
             }
 
-            await compiler.hooks.modulerizrFileRendered.promise($, htmlPluginData.plugin.options.modulerizr, modulerizr);
-            await compiler.hooks.modulerizrFileFinished.promise($, htmlPluginData.plugin.options.modulerizr, modulerizr);
+            await compiler.hooks.modulerizrFileRendered.promise($, htmlPluginData.plugin.options.modulerizr, context);
+            await compiler.hooks.modulerizrFileFinished.promise($, htmlPluginData.plugin.options.modulerizr, context);
 
             const replacedHtml = $.html(':root');
 
@@ -38,11 +38,11 @@ class PreRenderPlugin {
 }
 
 
-function render($, srcfile, store) {
+function render($, srcfile, context) {
     const $embeddedComponents = $('[data-render-comp]');
     $embeddedComponents.each((i, e) => {
         const $currentComp = $(e);
-        const embeddedComp = store.embeddedComponents[$currentComp.attr('data-component-id')];
+        const embeddedComp = context.embeddedComponents[$currentComp.attr('data-component-id')];
         srcfile.embeddedComponents.push(embeddedComp);
         if (embeddedComp.wrapperTag != null) {
             $currentComp.wrap(embeddedComp.wrapperTag);

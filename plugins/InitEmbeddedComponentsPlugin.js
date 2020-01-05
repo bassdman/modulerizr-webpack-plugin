@@ -2,24 +2,21 @@ const crypto = require('crypto');
 
 class InitEmbeddedComponentsPlugin {
     constructor(pluginconfig = {}) {}
-    apply(compiler, store, config) {
-        store.embeddedComponents = [];
-        compiler.hooks.modulerizrPreRenderFile.tap('InitEmbeddedComponentsPlugin', ($, srcfile) => {
-            addEmbeddedComponents($, store, srcfile, config);
+    apply(compiler) {
+        compiler.hooks.modulerizrPreRenderFile.tap('InitEmbeddedComponentsPlugin', ($, srcfile, context) => {
+            addEmbeddedComponents($, context, srcfile);
         })
-        compiler.hooks.modulerizrComponentInitialized.tap('InitEmbeddedComponentsPlugin', ($, component, components) => {
-            addEmbeddedComponents($, store, component, config);
+        compiler.hooks.modulerizrComponentInitialized.tap('InitEmbeddedComponentsPlugin', ($, component, context) => {
+            addEmbeddedComponents($, context, component);
         });
     }
 }
 
-function addEmbeddedComponents($, store, file, config) {
-    let i = 0;
-    for (component of store.components) {
+function addEmbeddedComponents($, context) {
+    for (component of context.components) {
         let $allComponents = $(component.name);
         const componentExists = $allComponents.length > 0;
 
-        i++;
         if (!componentExists)
             continue;
 
@@ -36,7 +33,7 @@ function addEmbeddedComponents($, store, file, config) {
                 id: componentId,
                 tag: $currentComp.prop('tagName').toLowerCase(),
                 content: $.html($currentComp),
-                wrapperTag: getWrapperTag(attributes.wrapper || config.defaultComponentWrapper),
+                wrapperTag: getWrapperTag(attributes.wrapper || context.config.defaultComponentWrapper),
                 innerHtml: $currentComp.html(),
                 componentId: component.id,
                 original,
@@ -45,7 +42,7 @@ function addEmbeddedComponents($, store, file, config) {
                 slots: getSlots($currentComp, $)
             };
 
-            store.embeddedComponents[embeddedComponentsConfig.id] = embeddedComponentsConfig;
+            context.embeddedComponents[embeddedComponentsConfig.id] = embeddedComponentsConfig;
         });
     }
 }

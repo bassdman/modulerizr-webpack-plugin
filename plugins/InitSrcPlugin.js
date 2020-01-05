@@ -10,21 +10,20 @@ class InitSrcPlugin {
     constructor(config = {}) {
         config = config;
     }
-    apply(compiler, store, config) {
-        compiler.hooks.modulerizrInit.tapPromise('InitSrcPlugin', async(modulerizr) => {
-            if (config.src == undefined)
+    apply(compiler) {
+        compiler.hooks.modulerizrInit.tapPromise('InitSrcPlugin', async(context) => {
+            if (context.config.src == undefined)
                 throw new Error('Error in your config: "src" is undefined but required.');
 
-            const srcFiles = await globFiles(ensureArray(config.src), compiler.context);
-            store.nrOfFiles = srcFiles.length;
+            const srcFiles = await globFiles(ensureArray(context.config.src), compiler.context);
+            context.nrOfFiles = srcFiles.length;
 
-            logFoundFiles(srcFiles, modulerizr);
+            logFoundFiles(srcFiles, context);
 
             await foreachPromise(srcFiles, async filePath => {
                 const content = await fs.readFile(filePath, "UTF-8")
                 const retObj = {
-                    registeredComponents: store.components,
-                    pluginconfig: config,
+                    registeredComponents: context.components,
                     original: content,
                     path: filePath,
                     type: 'src',
@@ -35,7 +34,7 @@ class InitSrcPlugin {
                 };
 
                 const filepath = path.join(filePath)
-                const srcOptions = Object.assign({}, config.srcOptions || {}, {
+                const srcOptions = Object.assign({}, context.config.srcOptions || {}, {
                     template: filepath,
                     filename: path.basename(filepath),
                     modulerizr: retObj
@@ -49,12 +48,12 @@ class InitSrcPlugin {
     }
 }
 
-function logFoundFiles(fileNames, modulerizr) {
+function logFoundFiles(fileNames, context) {
     if (fileNames.length == 0) {
-        modulerizr.log(`Sorry, no src-files found. Modify the attribute "src" in your modulerizr config to match some files.`, 'error');
+        context.logger.error(`Sorry, no src-files found. Modify the attribute "src" in your modulerizr config to match some files.`);
     } else {
-        modulerizr.log(`Found the following src-files:`);
-        fileNames.forEach(file => modulerizr.log(`   - ${file}`));
+        context.logger.debug(`Found the following src-files:`);
+        fileNames.forEach(file => context.logger.debug(`   - ${file}`));
     }
 }
 

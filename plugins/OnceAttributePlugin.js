@@ -6,10 +6,10 @@ class OnceAttributePlugin {
         this.internal = true;
     }
     apply(compiler) {
-        compiler.hooks.modulerizrFileRendered.tap('OnceAttributePlugin', ($, file, modulerizr) => {
+        compiler.hooks.modulerizrFileRendered.tap('OnceAttributePlugin', ($, file, context) => {
             const onceAttributes = {};
 
-            logIfExternalScriptWithoutOnceFound(modulerizr, $, this.onceAttributeName);
+            logIfExternalScriptWithoutOnceFound(context.logger, $, this.onceAttributeName);
             //identical style Tags are automatically rendered once
             $('style').attr(this.onceAttributeName, "");
 
@@ -30,7 +30,7 @@ class OnceAttributePlugin {
     }
 }
 
-function logIfExternalScriptWithoutOnceFound(modulerizr, $, onceAttributeName) {
+function logIfExternalScriptWithoutOnceFound(logger, $, onceAttributeName) {
     const $externalScriptsWithoutOnceAttr = $('[data-component] script[src]').not(`[${onceAttributeName}]`);
     const $externalStylesWithoutOnceAttr = $('[data-component] link[href]').not(`[${onceAttributeName}]`);
     const alreadyLoggedCache = {};
@@ -40,7 +40,7 @@ function logIfExternalScriptWithoutOnceFound(modulerizr, $, onceAttributeName) {
             return;
 
         alreadyLoggedCache[srcEntry] = true;
-        modulerizr.log(`   Script "${srcEntry}" in component "${$(elem).parent('[data-component]').data('component')}" has not a once-attribute. This means, it is executed each time your component is rendered. Is this your purpose? If yes, add attribute "nolog" to hide these logs.\n`, 'warn')
+        logger.warn(`   Script "${srcEntry}" in component "${$(elem).parent('[data-component]').data('component')}" has not a once-attribute. This means, it is executed each time your component is rendered. Is this your purpose? If yes, add attribute "nolog" to hide these logs.`)
     });
 
     $externalStylesWithoutOnceAttr.each((i, elem) => {
@@ -50,7 +50,7 @@ function logIfExternalScriptWithoutOnceFound(modulerizr, $, onceAttributeName) {
             return;
 
         alreadyLoggedCache[srcEntry] = true;
-        modulerizr.log(`   Style "${$(elem).attr('href')}" in component "${$(elem).parent('[data-component]').data('component')}" has not a once-attribute. This means, it is executed each time your component is rendered. Is this your purpose? If yes, add attribute "nolog" to hide these logs.\n`, 'warn')
+        logger.warn(`   Style "${$(elem).attr('href')}" in component "${$(elem).parent('[data-component]').data('component')}" has not a once-attribute. This means, it is executed each time your component is rendered. Is this your purpose? If yes, add attribute "nolog" to hide these logs.\n`)
     });
 }
 

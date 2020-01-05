@@ -7,7 +7,7 @@ class ScopeStylesPlugin {
         this.internal = true;
     }
     apply(compiler) {
-        compiler.hooks.modulerizrComponentInitialized.tap('ScopeStylesPlugin', ($, component, modulerizr) => {
+        compiler.hooks.modulerizrComponentInitialized.tap('ScopeStylesPlugin', ($, component, context) => {
             $('*').not('style,script').attr('data-v-' + component.id, "")
 
             const $styleTags = $(`style[${this.scopedAttributeName}]`);

@@ -7,18 +7,17 @@ const { ensureArray, foreachPromise, globFiles } = require('../utils');
 
 class InitComponentsPlugin {
     constructor(pluginconfig = {}) {
-        this.internal = true;
         this.serversideAttributeName = pluginconfig.prerenderscriptAttributeName || 'm-prerenderscript';
     }
-    apply(compiler, store, config) {
-        compiler.hooks.modulerizrInit.tapPromise('InitComponentsPlugin', async(modulerizr) => {
-            if (modulerizr.config.components == undefined)
+    apply(compiler) {
+        compiler.hooks.modulerizrInit.tapPromise('InitComponentsPlugin', async(context) => {
+            if (context.config.components == undefined)
                 return;
 
-            const componentFiles = await globFiles(ensureArray(modulerizr.config.components), compiler.context);
-            logFoundFiles(componentFiles, modulerizr);
+            const componentFiles = await globFiles(ensureArray(context.config.components), compiler.context);
+            logFoundFiles(componentFiles, context.logger);
 
-            store.components = [];
+            context.components = [];
 
             await foreachPromise(componentFiles, async fileName => {
                 const content = await fs.readFile(fileName, "UTF-8");
@@ -40,17 +39,17 @@ class InitComponentsPlugin {
                     embeddedComponents: []
                 }, $template.attributes);
 
-                store.components.push(component);
+                context.components.push(component);
             })
-            return await foreachPromise(store.components, async component => {
+            return await foreachPromise(context.components, async component => {
                 const $ = cheerio.load(component.content)
 
-                await compiler.hooks.modulerizrComponentInitialized.promise($, component, modulerizr);
+                await compiler.hooks.modulerizrComponentInitialized.promise($, component, context);
                 component.content = $('m-template').html();
             })
         });
 
-        compiler.hooks.modulerizrFileFinished.tap('InitComponentsPlugin-cleanup', ($, srcFile, modulerizr) => {
+        compiler.hooks.modulerizrFileFinished.tap('InitComponentsPlugin-cleanup', ($, srcFile, context) => {
             $(`[${this.serversideAttributeName}]`).remove();
         })
 
@@ -60,12 +59,12 @@ class InitComponentsPlugin {
     }
 }
 
-function logFoundFiles(fileNames, modulerizr) {
+function logFoundFiles(fileNames, logger) {
     if (fileNames.length == 0) {
-        modulerizr.log(`Sorry, no component-files found. Modify the attribute "components" in your modulerizr config to match some files.`, 'red');
+        logger.warn(`No component-files found. Modify the attribute "components" in your modulerizr config to match some files. Process will be continued without components.`);
     } else {
-        modulerizr.log(`Found the following component-files:`);
-        fileNames.forEach(file => modulerizr.log(`   - ${file}`));
+        logger.debug(`Found the following component-files:`);
+        fileNames.forEach(file => logger.debug(`   - ${file}`));
     }
 }
 

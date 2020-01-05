@@ -4,7 +4,7 @@ class ScopeScriptsPlugin {
         this.internal = true;
     }
     apply(compiler) {
-        compiler.hooks.modulerizrComponentInitialized.tap('InitComponentPlugin-TestComponentInitialized', ($, component, modulerizr) => {
+        compiler.hooks.modulerizrComponentInitialized.tap('InitComponentPlugin-TestComponentInitialized', ($, component, context) => {
             const $scriptTags = $(`script[${this.scopedAttributeName}]`);
             $scriptTags.each((i, e) => {
                 const $currentScripts = $(e);
