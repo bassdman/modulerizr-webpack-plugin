@@ -1,19 +1,19 @@
 const cheerio = require('cheerio');
 
-const store = require('../store');
-
 class PreRenderPlugin {
     constructor(pluginconfig = {}) {
         this.internal = true;
     }
-    apply(compiler) {
-        compiler.hooks.modulerizrRenderFile.tapPromise('ModulerizrPreRenderPlugin', async($, htmlPluginData, modulerizr) => {
-
+    apply(compiler, store) {
+        compiler.hooks.modulerizrTriggerRenderFile.tapPromise('ModulerizrPreRenderPlugin', async($, htmlPluginData, modulerizr) => {
             let allComponentsRendered = false;
             let level = 1;
 
+            await compiler.hooks.modulerizrPreRenderFile.promise($, htmlPluginData.plugin.options.modulerizr);
+
             while (!allComponentsRendered) {
-                render(modulerizr, $);
+                render($, htmlPluginData.plugin.options.modulerizr, store);
+
                 if ($('[data-render-comp]').length == 0)
                     allComponentsRendered = true;
 
@@ -23,8 +23,8 @@ class PreRenderPlugin {
                 level++;
             }
 
-            await compiler.hooks.modulerizrFileRendered.promise($, htmlPluginData, modulerizr);
-            await compiler.hooks.modulerizrFileFinished.promise($, htmlPluginData, modulerizr);
+            await compiler.hooks.modulerizrFileRendered.promise($, htmlPluginData.plugin.options.modulerizr, modulerizr);
+            await compiler.hooks.modulerizrFileFinished.promise($, htmlPluginData.plugin.options.modulerizr, modulerizr);
 
             const replacedHtml = $.html(':root');
 
@@ -38,38 +38,36 @@ class PreRenderPlugin {
 }
 
 
-function render(modulerizr, $) {
-    const $componentsToRender = $('[data-render-comp]');
-    $componentsToRender.each((i, e) => {
+function render($, srcfile, store) {
+    const $embeddedComponents = $('[data-render-comp]');
+    $embeddedComponents.each((i, e) => {
         const $currentComp = $(e);
-        const componentId = $currentComp.attr('data-component-id');
-        const componentElemConfig = store.queryOne(`$.embeddedComponents.id_${componentId}`);
-
-        if (componentElemConfig.wrapperTag != null) {
-            $currentComp.wrap(componentElemConfig.wrapperTag);
+        const embeddedComp = store.embeddedComponents[$currentComp.attr('data-component-id')];
+        srcfile.embeddedComponents.push(embeddedComp);
+        if (embeddedComp.wrapperTag != null) {
+            $currentComp.wrap(embeddedComp.wrapperTag);
             $currentComp.parent()
-                .attr("data-v-" + componentElemConfig.componentId, "")
-                .attr("id", componentElemConfig.componentId)
-                .attr("data-component", componentElemConfig.tag)
-                .attr("data-component-instance", componentId)
+                .attr("data-v-" + embeddedComp.component.id, "")
+                .attr("id", embeddedComp.component.id)
+                .attr("data-component", embeddedComp.tag)
+                .attr("data-component-instance", embeddedComp.id)
         }
+        const componentConfig = srcfile.registeredComponents.find(file => file.id == embeddedComp.component.id);
+        const replacedContent = replaceSlots(componentConfig.content, embeddedComp);
 
-        const componentConfig = store.queryOne(`$.component.id_${componentElemConfig.componentId}`);
 
-        const replacedContent = replaceSlots(componentConfig.content, componentElemConfig);
         $currentComp.replaceWith(replacedContent.trim());
-    });
-    return $(':root').html();
+    })
 }
 
-function replaceSlots(currentContent, componentElemConfig) {
+function replaceSlots(currentContent, embeddedComp) {
     const $ = cheerio.load(currentContent);
 
     const $slots = $(':root').find('slot');
     $slots.each((i, e) => {
         const $currentSlot = $(e);
         const name = $currentSlot.attr('name') || '_default';
-        const newContent = componentElemConfig.slots[name] || $currentSlot.html();
+        const newContent = embeddedComp.slots[name] || $currentSlot.html();
 
         $currentSlot.replaceWith(newContent);
     });

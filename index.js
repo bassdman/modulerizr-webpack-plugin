@@ -13,14 +13,16 @@ class ModulerizrWebpackPlugin {
         this.config = pluginconfig;
     }
     async apply(compiler) {
-        new ModulerizrCore(this.config).apply(compiler);
-        new InitComponentsPlugin().apply(compiler);
-        new InitSrcPlugin().apply(compiler);
-        new InitEmbeddedComponentsPlugin().apply(compiler);
+        const store = {};
+        new ModulerizrCore(this.config).apply(compiler, store);
+        new InitComponentsPlugin().apply(compiler, store, this.config);
+        new InitSrcPlugin().apply(compiler, store, this.config);
+        new InitEmbeddedComponentsPlugin().apply(compiler, store, this.config);
+        new PreRenderPlugin().apply(compiler, store);
+        new OnceAttributePlugin().apply(compiler);
         new ScopeStylesPlugin().apply(compiler);
         new ScopeScriptsPlugin().apply(compiler);
-        new PreRenderPlugin().apply(compiler);
-        new OnceAttributePlugin().apply(compiler);
+
     }
 }
 

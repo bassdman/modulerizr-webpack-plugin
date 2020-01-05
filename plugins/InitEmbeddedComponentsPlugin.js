@@ -1,31 +1,27 @@
 const crypto = require('crypto');
-const store = require('../store');
 
 class InitEmbeddedComponentsPlugin {
-    constructor(pluginconfig = {}) {
-        this.internal = true;
-    }
-    apply(compiler) {
-        compiler.hooks.modulerizrInit.tap('InitEmbeddedComponentsPlugin', modulerizr => {
-            modulerizr.src.$each($ => {
-                return addEmbeddedComponents(modulerizr, $);
-            })
+    constructor(pluginconfig = {}) {}
+    apply(compiler, store, config) {
+        store.embeddedComponents = [];
+        compiler.hooks.modulerizrPreRenderFile.tap('InitEmbeddedComponentsPlugin', ($, srcfile) => {
+            addEmbeddedComponents($, store, srcfile, config);
         })
-        compiler.hooks.modulerizrComponentInitialized.tap('InitComponentPlugin-TestComponentInitialized', ($, component, modulerizr) => {
-            addEmbeddedComponents(modulerizr, $);
+        compiler.hooks.modulerizrComponentInitialized.tap('InitEmbeddedComponentsPlugin', ($, component, components) => {
+            addEmbeddedComponents($, store, component, config);
         });
     }
 }
 
-function addEmbeddedComponents(modulerizr, $, currentPathAll, i) {
-    const globalWrapperTag = modulerizr.config.defaultComponentWrapper;
-
-    return store.each("$.component.*", (component, currentPath, i) => {
+function addEmbeddedComponents($, store, file, config) {
+    let i = 0;
+    for (component of store.components) {
         let $allComponents = $(component.name);
         const componentExists = $allComponents.length > 0;
 
+        i++;
         if (!componentExists)
-            return;
+            continue;
 
         $allComponents.each((i, e) => {
             const $currentComp = $(e);
@@ -40,20 +36,18 @@ function addEmbeddedComponents(modulerizr, $, currentPathAll, i) {
                 id: componentId,
                 tag: $currentComp.prop('tagName').toLowerCase(),
                 content: $.html($currentComp),
-                wrapperTag: getWrapperTag(attributes.wrapper || globalWrapperTag),
+                wrapperTag: getWrapperTag(attributes.wrapper || config.defaultComponentWrapper),
                 innerHtml: $currentComp.html(),
                 componentId: component.id,
                 original,
                 attributes,
+                component,
                 slots: getSlots($currentComp, $)
-            }
-            store.value(`$.embeddedComponents.id_${componentId}`, embeddedComponentsConfig);
+            };
 
-            if (currentPathAll)
-                store.value(`${currentPathAll}.content`, $.html(':root'));
+            store.embeddedComponents[embeddedComponentsConfig.id] = embeddedComponentsConfig;
         });
-    })
-    return;
+    }
 }
 
 function getSlots($comp, $) {

@@ -1,5 +1,3 @@
-const store = require('../store');
-
 class ScopeScriptsPlugin {
     constructor(pluginconfig = {}) {
         this.scopedAttributeName = pluginconfig.scopedAttributeName || 'm-scoped';
@@ -26,16 +24,16 @@ class ScopeScriptsPlugin {
             });
         });
 
-        compiler.hooks.modulerizrFileRendered.tap('ScopeScriptsPlugin-cleanup', ($, srcFile, modulerizr) => {
+        compiler.hooks.modulerizrFileRendered.tap('ScopeScriptsPlugin-cleanup', ($, srcFile) => {
             const $scopedScripts = $(`script[${this.scopedAttributeName}]`);
             $scopedScripts.each((i, e) => {
                 const embeddedComponentId = $(e).parent('[data-component-instance]').attr('data-component-instance');
-                const embeddedComponent = store.queryOne(`$.embeddedComponents.id_${embeddedComponentId}`);
-                const component = store.queryOne(`$.component.id_${embeddedComponent.componentId}`);
+
+                const component = srcFile.embeddedComponents.find(comp => comp.id == embeddedComponentId);
                 const replacedScript = $(e).html()
-                    .replace('##component.attributes##', JSON.stringify(embeddedComponent.attributes))
-                    .replace('##component.data##', JSON.stringify(Object.assign({}, embeddedComponent.attributes, component.prerenderdata || {})))
-                    .replace('##component.slots##', JSON.stringify(embeddedComponent.slots));
+                    .replace('##component.attributes##', JSON.stringify(component.attributes))
+                    .replace('##component.data##', JSON.stringify(Object.assign({}, component.attributes, component.component.prerenderdata || {})))
+                    .replace('##component.slots##', JSON.stringify(component.slots));
 
                 $(e).html(replacedScript);
             })

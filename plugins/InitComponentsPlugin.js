@@ -3,7 +3,6 @@ const fs = require('fs-extra');
 const crypto = require('crypto');
 const path = require('path');
 
-const store = require('../store');
 const { ensureArray, foreachPromise, globFiles } = require('../utils');
 
 class InitComponentsPlugin {
@@ -11,7 +10,7 @@ class InitComponentsPlugin {
         this.internal = true;
         this.serversideAttributeName = pluginconfig.prerenderscriptAttributeName || 'm-prerenderscript';
     }
-    apply(compiler) {
+    apply(compiler, store, config) {
         compiler.hooks.modulerizrInit.tapPromise('InitComponentsPlugin', async(modulerizr) => {
             if (modulerizr.config.components == undefined)
                 return;
@@ -19,30 +18,35 @@ class InitComponentsPlugin {
             const componentFiles = await globFiles(ensureArray(modulerizr.config.components), compiler.context);
             logFoundFiles(componentFiles, modulerizr);
 
-            return foreachPromise(componentFiles, async fileName => {
-                const fileContent = await fs.readFile(fileName, "UTF-8");
-                const $ = cheerio.load(`${fileContent.replace(/<\s*template/,'<m-template').replace(/template\s*>/,'m-template>')}`);
+            store.components = [];
+
+            await foreachPromise(componentFiles, async fileName => {
+                const content = await fs.readFile(fileName, "UTF-8");
+                const $ = cheerio.load(`${content.replace(/<\s*template/,'<m-template').replace(/template\s*>/,'m-template>')}`);
                 const $template = $('m-template');
 
                 const componentName = $template.attr('name');
                 const prerenderdata = await getPrerenderData($(`[${this.serversideAttributeName}]`), componentName, this.serversideAttributeName, compiler.context);
 
-                const retVal = Object.assign({
-                    id: crypto.createHash('md5').update(fileContent).digest("hex").substring(0, 8),
+                const component = Object.assign({
+                    id: crypto.createHash('md5').update(content).digest("hex").substring(0, 8),
                     params: {},
                     key: fileName,
+                    content: $.html($template),
                     original: $.html($template),
                     name: componentName,
-                    prerenderdata
+                    prerenderdata,
+                    type: 'component',
+                    embeddedComponents: []
                 }, $template.attributes);
 
-                await compiler.hooks.modulerizrComponentInitialized.promise($, retVal, modulerizr);
+                store.components.push(component);
+            })
+            return await foreachPromise(store.components, async component => {
+                const $ = cheerio.load(component.content)
 
-                retVal.content = $('m-template').html();
-
-                store.value(`$.component.id_${retVal.id}`, retVal)
-
-                return retVal;
+                await compiler.hooks.modulerizrComponentInitialized.promise($, component, modulerizr);
+                component.content = $('m-template').html();
             })
         });
 

@@ -5,18 +5,17 @@ const cheerio = require('cheerio');
 const getLogger = require('webpack-log');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 
-const store = require('../store');
-
 class ModulerizrCore {
     constructor(pluginconfig = {}) {
         this.config = pluginconfig;
     }
-    async apply(compiler) {
+    async apply(compiler, store) {
         compiler.hooks.modulerizrInit = new AsyncSeriesHook(['modulerizr']);
         compiler.hooks.modulerizrComponentInitialized = new AsyncSeriesHook(['$component', 'component', 'modulerizr']);
+        compiler.hooks.modulerizrTriggerRenderFile = new AsyncSeriesHook(['$', 'srcFile', 'modulerizr']);
+        compiler.hooks.modulerizrPreRenderFile = new AsyncSeriesHook(['$file', 'srcFile']);
         compiler.hooks.modulerizrFileRendered = new AsyncSeriesHook(['$file', 'srcFile', 'modulerizr']);
         compiler.hooks.modulerizrFileFinished = new AsyncSeriesHook(['$file', 'srcFile', 'modulerizr']);
-        compiler.hooks.modulerizrRenderFile = new AsyncSeriesHook(['$', 'srcFile', 'modulerizr']);
         compiler.hooks.modulerizrFinished = new AsyncSeriesHook(['modulerizr', 'compilation']);
 
         const modulerizr = new Modulerizr(this.config, compiler);
@@ -29,21 +28,19 @@ class ModulerizrCore {
                     throw new Error('config.plugins must be of type Array, but is type of ' + typeof modulerizr.config.plugins);
 
                 modulerizr.config.plugins.forEach(plugin => {
-                    plugin.apply(compiler);
+                    plugin.apply(compiler, store);
                 });
             }
 
             await compiler.hooks.modulerizrInit.promise(modulerizr);
-
             compiler.hooks.compilation.tap('ModulerizrPreRenderPlugin', compilation => {
-                const nrOfFiles = store.queryOne('nrOfFiles');
                 let i = 0;
                 HtmlWebpackPlugin.getHooks(compilation).beforeEmit.tapPromise('ModulerizrPreRenderPlugin', async(htmlPluginData) => {
                     const $ = cheerio.load(htmlPluginData.html);
-                    await compiler.hooks.modulerizrRenderFile.promise($, htmlPluginData, modulerizr);
+                    await compiler.hooks.modulerizrTriggerRenderFile.promise($, htmlPluginData, modulerizr);
                     htmlPluginData.html = $.html(':root');
 
-                    if (i == nrOfFiles - 1) {
+                    if (i == store.nrOfFiles - 1) {
                         await compiler.hooks.modulerizrFinished.promise(modulerizr, compilation);
                     }
                     i++;
