@@ -7,7 +7,7 @@ const { ensureArray, foreachPromise, globFiles } = require('../utils');
 
 class InitComponentsPlugin {
     constructor(pluginconfig = {}) {
-        this.serversideAttributeName = pluginconfig.prerenderscriptAttributeName || 'm-componentconfig';
+        this.componentconfigAttributeName = pluginconfig.prerenderscriptAttributeName || 'm-componentconfig';
     }
     apply(compiler) {
         compiler.hooks.modulerizrInit.tapPromise('InitComponentsPlugin', async(context) => {
@@ -25,7 +25,7 @@ class InitComponentsPlugin {
                 const $template = $('m-template');
 
                 const componentName = $template.attr('name');
-                const prerenderdata = await getPrerenderData($(`[${this.serversideAttributeName}]`), componentName, this.serversideAttributeName, compiler.context);
+                const prerenderdata = await getPrerenderData($(`[${this.componentconfigAttributeName}]`), componentName, this.componentconfigAttributeName, compiler.context);
 
                 const component = Object.assign({
                     id: crypto.createHash('md5').update(content).digest("hex").substring(0, 8),
@@ -50,7 +50,7 @@ class InitComponentsPlugin {
         });
 
         compiler.hooks.modulerizrFileFinished.tap('InitComponentsPlugin-cleanup', ($, srcFile, context) => {
-            $(`[${this.serversideAttributeName}]`).remove();
+            $(`[${this.componentconfigAttributeName}]`).remove();
         })
 
         compiler.hooks.modulerizrFinished.tapPromise('InitComponentsPlugin-cleanup', async() => {
@@ -68,12 +68,12 @@ function logFoundFiles(fileNames, logger) {
     }
 }
 
-async function getPrerenderData($prerenderdataTags, componentName, serversideAttributeName, rootPath) {
+async function getPrerenderData($prerenderdataTags, componentName, componentconfigAttributeName, rootPath) {
     if ($prerenderdataTags.length == 0)
         return undefined;
 
     if ($prerenderdataTags.length > 1)
-        throw new Error(`Error in component ${componentName}: Just one script with attribute ${serversideAttributeName} can exist in a component. You have ${$prerenderdataTags.length}.`)
+        throw new Error(`Error in component ${componentName}: Just one script with attribute ${componentconfigAttributeName} can exist in a component. You have ${$prerenderdataTags.length}.`)
 
     const script = $prerenderdataTags.html().trim();
 

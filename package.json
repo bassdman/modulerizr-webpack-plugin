@@ -1,6 +1,6 @@
 {
     "name": "modulerizr-webpack-plugin",
-    "version": "0.3.0-gamma.3",
+    "version": "0.3.0-gamma.4",
     "description": "Integrate a powerful, component based architecture to your legacy project with one webpack-plugin",
     "main": "index.js",
     "scripts": {
