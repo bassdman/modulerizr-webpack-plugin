@@ -7,7 +7,7 @@ const { ensureArray, foreachPromise, globFiles } = require('../utils');
 
 class InitComponentsPlugin {
     constructor(pluginconfig = {}) {
-        this.serversideAttributeName = pluginconfig.prerenderscriptAttributeName || 'm-prerenderscript';
+        this.serversideAttributeName = pluginconfig.prerenderscriptAttributeName || 'm-componentconfig';
     }
     apply(compiler) {
         compiler.hooks.modulerizrInit.tapPromise('InitComponentsPlugin', async(context) => {
