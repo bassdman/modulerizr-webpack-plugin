@@ -462,7 +462,7 @@ Right now the default wrapper-element is a div. But for some components you may 
 Add the "wrapper"-attribute to a component assignment to change the wrapper attribute.
 ```html
 ...
-<make-bold wrapper="h1">This is a bold header</make-bold>
+<make-bold m-wrapper="h1">This is a bold header</make-bold>
 ...
 ```
 will be rendered to
@@ -484,6 +484,8 @@ Instead of
 -->
 ...
 ```
+If you want to change the wrapper-element for all elements, [set the "defaultComponentWrapper"-Attribute](#defaultComponentWrapper) in the plugin-configuration.
+If both the config attribute ("defaultComponentWrapper") is set and the component attribute ("m-wrapper"), the component attribute will be used.
 
 #### Scoped Styles
 What happens if you have 2 components with the same style declaration, but different value? The style will be overwritten. :(

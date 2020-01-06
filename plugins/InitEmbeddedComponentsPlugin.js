@@ -33,7 +33,7 @@ function addEmbeddedComponents($, context) {
                 id: componentId,
                 tag: $currentComp.prop('tagName').toLowerCase(),
                 content: $.html($currentComp),
-                wrapperTag: getWrapperTag(attributes.wrapper || context.config.defaultComponentWrapper),
+                wrapperTag: getWrapperTag(attributes["m-wrapper"] || context.config.defaultComponentWrapper),
                 innerHtml: $currentComp.html(),
                 componentId: component.id,
                 original,
