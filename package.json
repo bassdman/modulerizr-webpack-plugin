@@ -1,6 +1,6 @@
 {
     "name": "modulerizr-webpack-plugin",
-    "version": "0.3.0-gamma.4",
+    "version": "0.3.0-gamma.5",
     "description": "Integrate a powerful, component based architecture to your legacy project with one webpack-plugin",
     "main": "index.js",
     "scripts": {
@@ -24,8 +24,9 @@
         "cheerio": "^1.0.0-rc.3",
         "colors": "^1.4.0",
         "css-tree": "^1.0.0-alpha.39",
-        "fs-extra": "^7.0.1",
+        "fs-extra": "^8.1.0",
         "glob": "^7.1.6",
-        "html-webpack-plugin": "^4.0.0-beta.4"
+        "html-webpack-plugin": "^4.0.0-beta.4",
+        "vm2": "^3.8.4"
     }
 }

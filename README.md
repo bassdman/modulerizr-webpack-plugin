@@ -16,8 +16,6 @@ Go to
     npm install modulerizr-webpack-plugin --save-dev
 ```
 
->The Modulerizr-Webpack-Plugin is in Gamma-Version now. This codebase is stable and there will be no more features until final release (~01/02 2020). Only More tests will be added and documentation will be completed. 
-
 
 <!-- - [Quicklink to the API](#api-description) -->
 

@@ -2,6 +2,13 @@ const cheerio = require('cheerio');
 const fs = require('fs-extra');
 const crypto = require('crypto');
 const path = require('path');
+const { NodeVM } = require('vm2');
+const vm = new NodeVM({
+    require: {
+        external: true,
+        builtin: ['fs', 'path'],
+    }
+});
 
 const { ensureArray, foreachPromise, globFiles } = require('../utils');
 
@@ -10,6 +17,7 @@ class InitComponentsPlugin {
         this.componentconfigAttributeName = pluginconfig.prerenderscriptAttributeName || 'm-componentconfig';
     }
     apply(compiler) {
+
         compiler.hooks.modulerizrInit.tapPromise('InitComponentsPlugin', async(context) => {
             if (context.config.components == undefined)
                 return;
@@ -25,7 +33,7 @@ class InitComponentsPlugin {
                 const $template = $('m-template');
 
                 const componentName = $template.attr('name');
-                const prerenderdata = await getPrerenderData($(`[${this.componentconfigAttributeName}]`), componentName, this.componentconfigAttributeName, compiler.context);
+                const prerenderdata = getPrerenderData($(`[${this.componentconfigAttributeName}]`), this.componentconfigAttributeName, path.join(compiler.context, fileName));
 
                 const component = Object.assign({
                     id: crypto.createHash('md5').update(content).digest("hex").substring(0, 8),
@@ -52,10 +60,6 @@ class InitComponentsPlugin {
         compiler.hooks.modulerizrFileFinished.tap('InitComponentsPlugin-cleanup', ($, srcFile, context) => {
             $(`[${this.componentconfigAttributeName}]`).remove();
         })
-
-        compiler.hooks.modulerizrFinished.tapPromise('InitComponentsPlugin-cleanup', async() => {
-            await fs.remove('./_temp');
-        })
     }
 }
 
@@ -68,26 +72,24 @@ function logFoundFiles(fileNames, logger) {
     }
 }
 
-async function getPrerenderData($prerenderdataTags, componentName, componentconfigAttributeName, rootPath) {
+async function getPrerenderData($prerenderdataTags, componentconfigAttributeName, filename) {
     if ($prerenderdataTags.length == 0)
         return undefined;
 
     if ($prerenderdataTags.length > 1)
-        throw new Error(`Error in component ${componentName}: Just one script with attribute ${componentconfigAttributeName} can exist in a component. You have ${$prerenderdataTags.length}.`)
+        throw new Error(`Error in file ${filename}: Just one script with attribute ${componentconfigAttributeName} can exist in a component. You have ${$prerenderdataTags.length}.`)
 
     const script = $prerenderdataTags.html().trim();
 
-    const tempFileHash = crypto.createHash('md5').update(script).digest("hex").substring(0, 8);
-    const tempFilename = "./_temp/temp_" + tempFileHash + '.js';
-
-    await fs.ensureDir(path.dirname(tempFilename));
-    await fs.writeFile(tempFilename, script);
-
-
-    const returnValue = require(path.join(rootPath, tempFilename));
-    const returnData = typeof returnValue.data == 'function' ? returnValue.data() : returnValue.data;
-
-    return returnData;
+    try {
+        const componentConfig = vm.run(script);
+        const returnData = typeof componentConfig.data == 'function' ? componentConfig.data() : componentConfig.data;
+        return returnData;
+    } catch (e) {
+        console.error(`\nError in file '${filename}':\nThe Componentconfig has an error.\n`);
+        console.error(e);
+        process.exit(1);
+    }
 }
 
 exports.InitComponentsPlugin = InitComponentsPlugin;
