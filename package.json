@@ -1,10 +1,11 @@
 {
     "name": "modulerizr-webpack-plugin",
-    "version": "0.3.0-gamma.5",
+    "version": "1.0.0",
     "description": "Integrate a powerful, component based architecture to your legacy project with one webpack-plugin",
     "main": "index.js",
     "scripts": {
-        "test": "echo \"Error: no test specified\" && exit 1"
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "start": "npm --prefix ./sample/ run start"
     },
     "keywords": [
         "modulerizr",

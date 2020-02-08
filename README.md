@@ -88,7 +88,7 @@ Here's is a solutionen - where you can have serverside syntax AND modularisation
 ## The solution
 __Modulerizr__.
 
-While angular, react,... give you many great features from the scratch without having to think about it, Modulerizr does it vice versa. It gives you a simple infrastructure for modularisation and you can add the features you want.
+While angular, react,... give you many great features from the scratch without having to think about it, Modulerizr does it vice versa. It gives you an infrastructure for modularisation and you can add the features you want.
 
 Because of this, you can append it to almost every legacy project you can imagine. 
 
@@ -196,7 +196,7 @@ Voilà, your're done. This will be rendered to:
 </html>
 ```
 
-If you need some more specials features, just [add a plugin](#plugins) that does what you need.
+If you need some more specials features, [add a plugin](#plugins) that does what you need.
 
 
 ## How to use it
@@ -207,7 +207,7 @@ If you need some more specials features, just [add a plugin](#plugins) that does
 ```
 
 ### Add it
-You just have to add this Webpack-Plugin and configure it - that's it. Internally it uses the [Html-Webpack-Plugin](https://webpack.js.org/plugins/html-webpack-plugin/) to create the files.
+You have to add this Webpack-Plugin and configure it - that's it. Internally it uses the [Html-Webpack-Plugin](https://webpack.js.org/plugins/html-webpack-plugin/) to create the files.
 
 ``` javascript
 const { ModulerizrWebpackPlugin } = require('modulerizr-webpack-plugin');
@@ -387,7 +387,7 @@ A component is always wrapped by a template-tag and has a uniqe name.
     </template>
 ```
 If the name is missing or a component with this name already exists, there will be an error.
-> Until now just one component per file is possible. Also inline components in a src-file are not possible. This will change in future.
+> Until now only one component per file is possible. Also inline components in a src-file are not possible. This will change in future.
 
 #### Slots
 The first "magic", well known from vue, web-components,...
@@ -531,7 +531,7 @@ This will be rendered to
 ```
 
 ##### Solution
-If you want scoped styles, just add a "scoped" attribute to the "style"-tag.
+If you want scoped styles, add a "scoped" attribute to the "style"-tag.
 Component A
 ```html
 <template name="red-text">
@@ -657,7 +657,7 @@ There are two Problems:
 - variables can be overwritten what is not expected
 
 ##### Solution
-Scoped Scripts: Just add a "scoped"-Attribute to the script and this can not happen anymore.
+Scoped Scripts: Add a "scoped"-Attribute to the script and this can not happen anymore.
 
 I this case, the parent component stays the same. In the child component we add a "scoped"-Attriubte
 
