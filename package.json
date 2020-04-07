@@ -25,9 +25,11 @@
         "cheerio": "^1.0.0-rc.3",
         "colors": "^1.4.0",
         "css-tree": "^1.0.0-alpha.39",
+        "find": "^0.3.0",
         "fs-extra": "^8.1.0",
         "glob": "^7.1.6",
         "html-webpack-plugin": "^4.0.0-beta.4",
+        "loader-utils": "^1.2.3",
         "vm2": "^3.8.4"
     }
 }
